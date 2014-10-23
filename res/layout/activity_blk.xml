@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#cccccc"
     android:orientation="vertical"
-    tools:context="com.example.slide2finish.SecondActivity" >
+    tools:context="com.example.swipe2finish.SecondActivity" >
 
     <ScrollView
         android:id="@+id/scroll"

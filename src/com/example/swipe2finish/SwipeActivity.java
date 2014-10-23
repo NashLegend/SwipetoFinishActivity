@@ -1,5 +1,5 @@
 
-package com.example.slide2finish;
+package com.example.swipe2finish;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
@@ -23,24 +23,24 @@ import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 
-public class SlideActivity extends Activity {
+public class SwipeActivity extends Activity {
 
-    private SlideLayout slideLayout;
+    private SwipeLayout swipeLayout;
 
-    public SlideActivity() {
+    public SwipeActivity() {
 
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        slideLayout = new SlideLayout(this);
+        swipeLayout = new SwipeLayout(this);
     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        slideLayout.replaceLayer(this);
+        swipeLayout.replaceLayer(this);
     }
 
     public static int getScreenWidth(Context context) {
@@ -51,28 +51,28 @@ public class SlideActivity extends Activity {
         return metrics.widthPixels;
     }
 
-    boolean slideFinished = false;
+    private boolean swipeFinished = false;
 
     @Override
     public void finish() {
-        if (slideFinished) {
+        if (swipeFinished) {
             super.finish();
         } else {
-            slideLayout.animateFinish(false);
+            swipeLayout.animateFinish(false);
         }
     }
 
-    class SlideLayout extends FrameLayout {
+    class SwipeLayout extends FrameLayout {
 
-        public SlideLayout(Context context) {
+        public SwipeLayout(Context context) {
             super(context);
         }
 
-        public SlideLayout(Context context, AttributeSet attrs) {
+        public SwipeLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
         }
 
-        public SlideLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+        public SwipeLayout(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
         }
 
@@ -89,7 +89,7 @@ public class SlideActivity extends Activity {
             sideWidth = (int) (sideWidthInDP * activity.getResources().getDisplayMetrics().density);
         }
 
-        boolean canSlide = false;
+        boolean canSwipe = false;
         View content;
         Activity mActivity;
         int sideWidthInDP = 20;
@@ -100,7 +100,7 @@ public class SlideActivity extends Activity {
         @Override
         public boolean onInterceptTouchEvent(MotionEvent ev) {
             if (ev.getAction() == MotionEvent.ACTION_DOWN && ev.getX() < sideWidth) {
-                canSlide = true;
+                canSwipe = true;
                 tracker = VelocityTracker.obtain();
                 return true;
             }
@@ -115,7 +115,7 @@ public class SlideActivity extends Activity {
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            if (canSlide) {
+            if (canSwipe) {
                 tracker.addMovement(event);
                 int action = event.getAction();
                 switch (action) {
@@ -141,7 +141,7 @@ public class SlideActivity extends Activity {
                     case MotionEvent.ACTION_CANCEL:
                         tracker.computeCurrentVelocity(10000);
                         tracker.computeCurrentVelocity(1000, 20000);
-                        canSlide = false;
+                        canSwipe = false;
                         int mv = screenWidth / 200 * 1000;
                         if (Math.abs(tracker.getXVelocity()) > mv) {
                             animateFromVelocity(tracker.getXVelocity());
@@ -204,7 +204,7 @@ public class SlideActivity extends Activity {
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     if (!mActivity.isFinishing()) {
-                        slideFinished = true;
+                        swipeFinished = true;
                         mActivity.finish();
                     }
                 }
@@ -239,7 +239,7 @@ public class SlideActivity extends Activity {
         }
 
         @TargetApi(Build.VERSION_CODES.L)
-        public SlideLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        public SwipeLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
             super(context, attrs, defStyleAttr, defStyleRes);
         }
     }

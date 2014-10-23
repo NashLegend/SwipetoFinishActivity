@@ -1,7 +1,7 @@
 
-package com.example.slide2finish;
+package com.example.swipe2finish;
 
-import com.example.slide2finish.R;
+import com.example.swipe2finish.R;
 
 import android.app.Activity;
 import android.content.Intent;

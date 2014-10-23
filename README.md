@@ -1,4 +1,4 @@
-SlidetoFinishActivity
+SwipetoFinishActivity
 =====================
 
-Slide an activity and finish it
+Swipe an activity and finish it

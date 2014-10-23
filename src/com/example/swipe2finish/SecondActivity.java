@@ -1,7 +1,7 @@
 
-package com.example.slide2finish;
+package com.example.swipe2finish;
 
-import com.example.slide2finish.R;
+import com.example.swipe2finish.R;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -13,7 +13,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.View.OnTouchListener;
 
-public class SecondActivity extends SlideActivity {
+public class SecondActivity extends SwipeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
