@@ -32,6 +32,7 @@ Android activity滑动返回原理
 	}
 ```
 
+然后我们把这些写成一个SwipeActivity，其它activity只要继承这个SwipeActivity就可以实现滑动返回功能（当然Style仍然要设置的）
 这里只说滑动activity的原理，剩下的都是控制滑动的事了，详见代码
 
 ----------
