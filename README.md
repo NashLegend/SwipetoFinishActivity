@@ -10,12 +10,12 @@ Android activity滑动返回原理
 	<item name="android:windowIsTranslucent">true</item>
 	```
 	
-2. 先看看activity的层次结构：我们用的activity的xml的根view并不是activity的根view，在它上面还有一个父view，id是android.R.id.content，再向上一次，还有一个view，它是一个LinearLayout，它除了放置我们创建的view之外，还放置我们的xml之前的一些东西比如放ActionBar或者标题栏什么的。而再往上一级，就到了activity的根view——DecorView。如下图
+2. 先看看activity的层次结构：我们用的activity的xml的根view并不是activity的根view，在它上面还有一个父view，id是android.R.id.content，再向上一层，还有一个view，它是一个LinearLayout，它除了放置我们创建的view之外，还放置我们的xml之外的一些东西比如放ActionBar或者标题栏什么的。而再往上一级，就到了activity的根view——DecorView。如下图
 	![](http://i.imgur.com/kBuvnRM.png)
 
-	要做到像iOS那样，可以滑动整个activity，只滑动我们在xml里面创建的view显然是不对的，因为我们还有标题栏、ActionBar什么的，所以我们要滑动的应该是DecorView或者倒数第二层的那个view。
+	要做到像iOS那样可以滑动整个activity，只滑动我们在xml里面创建的view显然是不对的，因为我们还有标题栏、ActionBar什么的，所以我们要滑动的应该是DecorView或者倒数第二层的那个view。
 
-	而要滑动view的话，我们要重写其父窗口的onInterceptTouchEvent以及onTouchEvent【当然使用setOnTouchListener不是不可能，但是如果子view里面有一个消费了onTouch事件，那么也就接收不到了】，但是窗口的创建过程不是我们能控制的，DecorView的创建都不是我们能干预的。解决办法就是，我们自己创建一个SwipeLayout，然后人为地插入顶层view中，放置在DecorView和其下面的LinearLayout中间，随着手指的滑动，不断改变SwipeLayout的子view——曾经是DecorView的子view的位置，这样我们就可以控制我们的滑动啦。我们在activity的onPostCreate方法中调用swipeLayout.replaceLayer替换我们的SwipeLayout，代码如下
+	而要滑动view的话，我们要重写其父窗口的onInterceptTouchEvent以及onTouchEvent【当然使用setOnTouchListener不是不可能，但是如果子view里面有一个消费了onTouch事件，那么也就接收不到了】，但是窗口的创建过程不是我们能控制的，DecorView的创建都不是我们能干预的。解决办法就是，我们自己创建一个SwipeLayout，然后人为地插入顶层view中，放置在DecorView和其下面的LinearLayout中间，随着手指的滑动，不断改变SwipeLayout的子view——曾经是DecorView的子view——的位置，这样我们就可以控制activity的滑动啦。我们在activity的onPostCreate方法中调用swipeLayout.replaceLayer替换我们的SwipeLayout，代码如下
 
 ```
 	public void replaceLayer(Activity activity) {
