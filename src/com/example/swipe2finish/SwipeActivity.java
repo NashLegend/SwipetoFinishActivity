@@ -82,9 +82,15 @@ public class SwipeActivity extends Activity {
             setClickable(true);
             ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
             content = root.getChildAt(0);
+            //在Android5.0上，content的高度不再是屏幕高度，而是变成了Activity高度，比屏幕高度低一些，
+            //如果this.addView(content),就会使用以前的params，这样content会像root一样比content高出一部分，导致底部空出一部分
+            //在装有Android 5.0的Nexus5上，root,SwipeLayout和content的高度分别是1920、1776、1632，144的等差数列……
+            //在装有Android4.4.3的HTC One M7上，root,SwipeLayout和content的高度分别相同，都是1920
+            //所以我们要做的就是给content一个新的LayoutParams，Match_Parent那种，也就是下面的params2
             ViewGroup.LayoutParams params = content.getLayoutParams();
+            ViewGroup.LayoutParams params2 = new ViewGroup.LayoutParams(-1, -1);
             root.removeView(content);
-            this.addView(content);
+            this.addView(content, params2);
             root.addView(this, params);
             sideWidth = (int) (sideWidthInDP * activity.getResources().getDisplayMetrics().density);
         }
