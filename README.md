@@ -25,8 +25,9 @@ Android activity滑动返回原理
 	    ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
 	    content = root.getChildAt(0);
 	    ViewGroup.LayoutParams params = content.getLayoutParams();
-	    root.removeView(content);
-	    this.addView(content);
+            ViewGroup.LayoutParams params2 = new ViewGroup.LayoutParams(-1, -1);
+            root.removeView(content);
+            this.addView(content, params2);
 	    root.addView(this, params);
 	    sideWidth = (int) (sideWidthInDP * activity.getResources().getDisplayMetrics().density);
 	}
