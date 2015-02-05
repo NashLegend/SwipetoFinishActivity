@@ -1,7 +1,7 @@
 
-package com.example.swipe2finish;
+package net.nashlegend.swipetofinishactivity;
 
-import com.example.swipe2finish.R;
+import net.nashlegend.swipetofinishactivity.R;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;

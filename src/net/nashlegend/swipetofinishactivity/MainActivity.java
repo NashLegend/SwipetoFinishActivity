@@ -1,7 +1,7 @@
 
-package com.example.swipe2finish;
+package net.nashlegend.swipetofinishactivity;
 
-import com.example.swipe2finish.R;
+import net.nashlegend.swipetofinishactivity.R;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -10,7 +10,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 
 public class MainActivity extends Activity {
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Swipe2Finish</string>
+    <string name="app_name">SwipetoFinishActivity</string>
     <string name="hello_world">This is the first activity</string>
     <string name="start">Start New Activity</string>
     <string name="Sec">This is the second activity</string>
