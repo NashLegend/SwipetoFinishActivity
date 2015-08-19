@@ -1,34 +1,35 @@
 package net.nashlegend.swipetofinishactivity;
 
 import android.animation.Animator;
-import android.animation.Animator.AnimatorListener;
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.os.Build;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.view.MotionEvent;
-import android.view.VelocityTracker;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.view.*;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
-import java.util.ArrayList;
-
-import net.nashlegend.swipetofinishactivity.R;
-
+/**
+ * 滑动关闭页面基类，使用时继承此类并使用BlankTheme主题即可
+ */
 public class SwipeActivity extends Activity {
 
     private SwipeLayout swipeLayout;
-    private int layerColor = Color.parseColor("#88000000");
-    protected boolean swipeAnyWhere = false;//是否可以在页面任意位置右滑关闭页面，如果是false则从左边滑才可以关闭
+
+    /**
+     * 是否可以滑动关闭页面
+     */
+    protected boolean swipeEnabled = true;
+
+    /**
+     * 是否可以在页面任意位置右滑关闭页面，如果是false则从左边滑才可以关闭。
+     */
+    protected boolean swipeAnyWhere = false;
 
     public SwipeActivity() {
 
@@ -39,6 +40,23 @@ public class SwipeActivity extends Activity {
         super.onCreate(savedInstanceState);
         swipeLayout = new SwipeLayout(this);
     }
+
+    public void setSwipeAnyWhere(boolean swipeAnyWhere) {
+        this.swipeAnyWhere = swipeAnyWhere;
+    }
+
+    public boolean isSwipeAnyWhere() {
+        return swipeAnyWhere;
+    }
+
+    public void setSwipeEnabled(boolean swipeEnabled) {
+        this.swipeEnabled = swipeEnabled;
+    }
+
+    public boolean isSwipeEnabled() {
+        return swipeEnabled;
+    }
+
 
     @Override
     protected void onResume() {
@@ -53,8 +71,7 @@ public class SwipeActivity extends Activity {
 
     public static int getScreenWidth(Context context) {
         DisplayMetrics metrics = new DisplayMetrics();
-        WindowManager manager = (WindowManager) context
-                .getSystemService(WINDOW_SERVICE);
+        WindowManager manager = (WindowManager) context.getSystemService(WINDOW_SERVICE);
         manager.getDefaultDisplay().getMetrics(metrics);
         return metrics.widthPixels;
     }
@@ -65,6 +82,7 @@ public class SwipeActivity extends Activity {
     public void finish() {
         if (swipeFinished) {
             super.finish();
+            overridePendingTransition(0, 0);
         } else {
             swipeLayout.cancelPotentialAnimation();
             super.finish();
@@ -74,7 +92,8 @@ public class SwipeActivity extends Activity {
 
     class SwipeLayout extends FrameLayout {
 
-        private View backgroundLayer;
+        //private View backgroundLayer;用来设置滑动时的背景色
+        private Drawable leftShadow;
 
         public SwipeLayout(Context context) {
             super(context);
@@ -89,33 +108,39 @@ public class SwipeActivity extends Activity {
         }
 
         public void replaceLayer(Activity activity) {
+            leftShadow = activity.getResources().getDrawable(R.drawable.left_shadow);
             touchSlop = (int) (touchSlopDP * activity.getResources().getDisplayMetrics().density);
             sideWidth = (int) (sideWidthInDP * activity.getResources().getDisplayMetrics().density);
             mActivity = activity;
             screenWidth = getScreenWidth(activity);
             setClickable(true);
-            backgroundLayer = new View(activity);
-            backgroundLayer.setBackgroundColor(layerColor);
             final ViewGroup root = (ViewGroup) activity.getWindow().getDecorView();
             content = root.getChildAt(0);
-            //在Android5.0上，content的高度不再是屏幕高度，而是变成了Activity高度，比屏幕高度低一些，
-            //如果this.addView(content),就会使用以前的params，这样content会像root一样比content高出一部分，导致底部空出一部分
-            //在装有Android 5.0的Nexus5上，root,SwipeLayout和content的高度分别是1920、1776、1632，144的等差数列……
-            //在装有Android4.4.3的HTC One M7上，root,SwipeLayout和content的高度分别相同，都是1920
-            //所以我们要做的就是给content一个新的LayoutParams，Match_Parent那种，也就是下面的-1
             ViewGroup.LayoutParams params = content.getLayoutParams();
             ViewGroup.LayoutParams params2 = new ViewGroup.LayoutParams(-1, -1);
-            ViewGroup.LayoutParams params3 = new ViewGroup.LayoutParams(-1, -1);
             root.removeView(content);
-            this.addView(backgroundLayer, params3);
             this.addView(content, params2);
             root.addView(this, params);
         }
 
+        @Override
+        protected boolean drawChild(@NonNull Canvas canvas, @NonNull View child, long drawingTime) {
+            boolean result = super.drawChild(canvas, child, drawingTime);
+            final int shadowWidth = leftShadow.getIntrinsicWidth();
+            int left = (int) (getContentX()) - shadowWidth;
+            leftShadow.setBounds(left, child.getTop(), left + shadowWidth, child.getBottom());
+            leftShadow.draw(canvas);
+            return result;
+        }
+
         boolean canSwipe = false;
+        /**
+         * 超过了touchslop仍然没有达到没有条件，则忽略以后的动作
+         */
+        boolean ignoreSwipe = false;
         View content;
         Activity mActivity;
-        int sideWidthInDP = 20;
+        int sideWidthInDP = 16;
         int sideWidth = 72;
         int screenWidth = 1080;
         VelocityTracker tracker;
@@ -126,43 +151,58 @@ public class SwipeActivity extends Activity {
         float currentX;
         float currentY;
 
-
         int touchSlopDP = 30;
         int touchSlop = 60;
 
         @Override
-        public boolean onInterceptTouchEvent(MotionEvent ev) {
-            if (swipeAnyWhere) {
-                switch (ev.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        downX = ev.getX();
-                        downY = ev.getY();
-                        currentX = downX;
-                        currentY = downY;
-                        lastX = downX;
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        float dx = ev.getX() - downX;
-                        float dy = ev.getY() - downY;
-                        if ((dy == 0f || Math.abs(dx / dy) > 1) && (dx * dx + dy * dy > touchSlop * touchSlop)) {
+        public boolean dispatchTouchEvent(@NonNull MotionEvent ev) {
+            if (swipeEnabled && !canSwipe && !ignoreSwipe) {
+                if (swipeAnyWhere) {
+                    switch (ev.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
                             downX = ev.getX();
                             downY = ev.getY();
                             currentX = downX;
                             currentY = downY;
                             lastX = downX;
-                            canSwipe = true;
-                            tracker = VelocityTracker.obtain();
-                            return true;
-                        }
-                        break;
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            float dx = ev.getX() - downX;
+                            float dy = ev.getY() - downY;
+                            if (dx * dx + dy * dy > touchSlop * touchSlop) {
+                                if (dy == 0f || Math.abs(dx / dy) > 1) {
+                                    downX = ev.getX();
+                                    downY = ev.getY();
+                                    currentX = downX;
+                                    currentY = downY;
+                                    lastX = downX;
+                                    canSwipe = true;
+                                    tracker = VelocityTracker.obtain();
+                                    return true;
+                                } else {
+                                    ignoreSwipe = true;
+                                }
+                            }
+                            break;
+                    }
+                } else if (ev.getAction() == MotionEvent.ACTION_DOWN && ev.getX() < sideWidth) {
+                    canSwipe = true;
+                    tracker = VelocityTracker.obtain();
+                    return true;
                 }
-            } else if (ev.getAction() == MotionEvent.ACTION_DOWN && ev.getX() < sideWidth) {
-                canSwipe = true;
-                tracker = VelocityTracker.obtain();
-                return true;
             }
-            return super.onInterceptTouchEvent(ev);
+            if (ev.getAction() == MotionEvent.ACTION_UP || ev.getAction() == MotionEvent.ACTION_CANCEL) {
+                ignoreSwipe = false;
+            }
+            return super.dispatchTouchEvent(ev);
         }
+
+        @Override
+        public boolean onInterceptTouchEvent(MotionEvent ev) {
+            return canSwipe || super.onInterceptTouchEvent(ev);
+        }
+
+        boolean hasIgnoreFirstMove;
 
         @Override
         public boolean onTouchEvent(@NonNull MotionEvent event) {
@@ -181,10 +221,14 @@ public class SwipeActivity extends Activity {
                         currentX = event.getX();
                         currentY = event.getY();
                         float dx = currentX - lastX;
-                        if (content.getX() + dx < 0) {
+                        if (dx != 0f && !hasIgnoreFirstMove) {
+                            hasIgnoreFirstMove = true;
+                            dx = dx / dx;
+                        }
+                        if (getContentX() + dx < 0) {
                             setContentX(0);
                         } else {
-                            setContentX(content.getX() + dx);
+                            setContentX(getContentX() + dx);
                         }
                         lastX = currentX;
                         break;
@@ -193,11 +237,12 @@ public class SwipeActivity extends Activity {
                         tracker.computeCurrentVelocity(10000);
                         tracker.computeCurrentVelocity(1000, 20000);
                         canSwipe = false;
+                        hasIgnoreFirstMove = false;
                         int mv = screenWidth / 200 * 1000;
                         if (Math.abs(tracker.getXVelocity()) > mv) {
                             animateFromVelocity(tracker.getXVelocity());
                         } else {
-                            if (content.getX() > screenWidth / 2) {
+                            if (getContentX() > screenWidth / 2) {
                                 animateFinish(false);
                             } else {
                                 animateBack(false);
@@ -212,7 +257,7 @@ public class SwipeActivity extends Activity {
             return super.onTouchEvent(event);
         }
 
-        AnimatorSet animator;
+        ObjectAnimator animator;
 
         public void cancelPotentialAnimation() {
             if (animator != null) {
@@ -221,53 +266,44 @@ public class SwipeActivity extends Activity {
             }
         }
 
-        private void setContentX(float x) {
-            content.setX(x);
-            if (backgroundLayer != null) {
-                backgroundLayer.setAlpha(1 - x / getWidth());
-            }
+        public void setContentX(float x) {
+            int ix = (int) x;
+            content.setX(ix);
+            invalidate();
+        }
+
+        public float getContentX() {
+            return content.getX();
         }
 
 
         /**
          * 弹回，不关闭，因为left是0，所以setX和setTranslationX效果是一样的
          *
-         * @param withVel
+         * @param withVel 使用计算出来的时间
          */
         private void animateBack(boolean withVel) {
             cancelPotentialAnimation();
-            animator = new AnimatorSet();
-            ObjectAnimator animatorX = ObjectAnimator.ofFloat(content, "x", content.getX(), 0);
-            ObjectAnimator animatorA = ObjectAnimator.ofFloat(backgroundLayer, "alpha", backgroundLayer.getAlpha(), 1);
-            ArrayList<Animator> animators = new ArrayList<>();
-            animators.add(animatorX);
-            animators.add(animatorA);
-            if (withVel) {
-                animator.setDuration((long) (duration * content.getX() / screenWidth));
-            } else {
-                animator.setDuration(duration);
+            animator = ObjectAnimator.ofFloat(this, "contentX", getContentX(), 0);
+            int tmpDuration = withVel ? ((int) (duration * getContentX() / screenWidth)) : duration;
+            if (tmpDuration < 100) {
+                tmpDuration = 100;
             }
-            animator.playTogether(animators);
+            animator.setDuration(tmpDuration);
+            animator.setInterpolator(new DecelerateInterpolator());
             animator.start();
         }
 
         private void animateFinish(boolean withVel) {
             cancelPotentialAnimation();
-            animator = new AnimatorSet();
-
-            ObjectAnimator animatorX = ObjectAnimator.ofFloat(content, "x", content.getX(), screenWidth);
-            ObjectAnimator animatorA = ObjectAnimator.ofFloat(backgroundLayer, "alpha", backgroundLayer.getAlpha(), 0);
-            ArrayList<Animator> animators = new ArrayList<>();
-            animators.add(animatorX);
-            animators.add(animatorA);
-            if (withVel) {
-                animator.setDuration((long) (duration * (screenWidth - content.getX()) / screenWidth));
-            } else {
-                animator.setDuration(duration);
+            animator = ObjectAnimator.ofFloat(this, "contentX", getContentX(), screenWidth);
+            int tmpDuration = withVel ? ((int) (duration * (screenWidth - getContentX()) / screenWidth)) : duration;
+            if (tmpDuration < 100) {
+                tmpDuration = 100;
             }
-            animator.playTogether(animators);
-
-            animator.addListener(new AnimatorListener() {
+            animator.setDuration(tmpDuration);
+            animator.setInterpolator(new DecelerateInterpolator());
+            animator.addListener(new Animator.AnimatorListener() {
 
                 @Override
                 public void onAnimationStart(Animator animation) {
@@ -295,30 +331,23 @@ public class SwipeActivity extends Activity {
             animator.start();
         }
 
-        private int duration = 200;
+        private final int duration = 200;
 
         private void animateFromVelocity(float v) {
             if (v > 0) {
-                if (content.getX() < screenWidth / 2
-                        && v * duration / 1000 + content.getX() < screenWidth) {
+                if (getContentX() < screenWidth / 2 && v * duration / 1000 + getContentX() < screenWidth / 2) {
                     animateBack(false);
                 } else {
                     animateFinish(true);
                 }
             } else {
-                if (content.getX() > screenWidth / 2
-                        && v * duration / 1000 + content.getX() > screenWidth / 2) {
+                if (getContentX() > screenWidth / 2 && v * duration / 1000 + getContentX() > screenWidth / 2) {
                     animateFinish(false);
                 } else {
                     animateBack(true);
                 }
             }
 
-        }
-
-        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-        public SwipeLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-            super(context, attrs, defStyleAttr, defStyleRes);
         }
     }
 

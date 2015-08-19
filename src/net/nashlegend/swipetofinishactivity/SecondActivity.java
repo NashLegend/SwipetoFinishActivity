@@ -19,5 +19,6 @@ public class SecondActivity extends SwipeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_blk);
+        setSwipeAnyWhere(true);
     }
 }
