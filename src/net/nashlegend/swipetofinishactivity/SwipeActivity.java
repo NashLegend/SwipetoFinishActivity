@@ -242,7 +242,7 @@ public class SwipeActivity extends Activity {
                         if (Math.abs(tracker.getXVelocity()) > mv) {
                             animateFromVelocity(tracker.getXVelocity());
                         } else {
-                            if (getContentX() > screenWidth / 2) {
+                            if (getContentX() > screenWidth / 3) {
                                 animateFinish(false);
                             } else {
                                 animateBack(false);
