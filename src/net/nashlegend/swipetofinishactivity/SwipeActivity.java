@@ -151,7 +151,7 @@ public class SwipeActivity extends Activity {
         float currentX;
         float currentY;
 
-        int touchSlopDP = 30;
+        int touchSlopDP = 20;
         int touchSlop = 60;
 
         @Override
@@ -238,7 +238,7 @@ public class SwipeActivity extends Activity {
                         tracker.computeCurrentVelocity(1000, 20000);
                         canSwipe = false;
                         hasIgnoreFirstMove = false;
-                        int mv = screenWidth / 200 * 1000;
+                        int mv = screenWidth * 3;
                         if (Math.abs(tracker.getXVelocity()) > mv) {
                             animateFromVelocity(tracker.getXVelocity());
                         } else {
@@ -335,13 +335,13 @@ public class SwipeActivity extends Activity {
 
         private void animateFromVelocity(float v) {
             if (v > 0) {
-                if (getContentX() < screenWidth / 2 && v * duration / 1000 + getContentX() < screenWidth / 2) {
+                if (getContentX() < screenWidth / 3 && v * duration / 1000 + getContentX() < screenWidth / 3) {
                     animateBack(false);
                 } else {
                     animateFinish(true);
                 }
             } else {
-                if (getContentX() > screenWidth / 2 && v * duration / 1000 + getContentX() > screenWidth / 2) {
+                if (getContentX() > screenWidth / 3 && v * duration / 1000 + getContentX() > screenWidth / 3) {
                     animateFinish(false);
                 } else {
                     animateBack(true);
