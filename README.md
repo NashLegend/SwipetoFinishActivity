@@ -1,6 +1,8 @@
 Android activity滑动返回原理
 =====================
 
+###小米手机上最底部的Activity不能是透明的
+
 像fragment一样，activity本身是不可以滑动的，但是我们可以制造一个正在滑动activity的假象，使得看起来这个activity正在被手指滑动。其原理其实很简单，我们滑动的其实是activity里面的可见view元素，而我们将activity设置为透明的，这样当view滑过的时候，由于activity的底部是透明的，我们就可以在滑动过程中看到下面的activity，这样看起来就是在滑动activity。所以activity滑动效果分两步，1，设置透明，2，滑动view
 
 

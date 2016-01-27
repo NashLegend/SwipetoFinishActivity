@@ -21,8 +21,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, SecondActivity.class));
-                overridePendingTransition(R.anim.slide_in_right,
-                        android.R.anim.slide_out_right);
+                overridePendingTransition(R.anim.slide_in_right,0);
             }
         });
     }
